@@ -1,0 +1,5 @@
+data/*.db
+data/vault.json
+__pycache__/
+*.pyc
+.venv/
