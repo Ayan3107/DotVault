@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DotVault</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">D</div>
+
+            <div>
+                <h1>DotVault</h1>
+                <p>Your personal knowledge vault</p>
+            </div>
+        </div>
+
+        <button id="addButton" class="add-button">
+            + Add item
+        </button>
+    </header>
+
+
+    <main class="container">
+
+        <section class="search-section">
+
+            <div class="search-box">
+                <span>⌕</span>
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search your vault..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="filters">
+                <button class="filter active" data-category="all">
+                    All
+                </button>
+
+                <button class="filter" data-category="command">
+                    Commands
+                </button>
+
+                <button class="filter" data-category="note">
+                    Notes
+                </button>
+
+                <button class="filter" data-category="api">
+                    APIs
+                </button>
+
+                <button class="filter" data-category="link">
+                    Links
+                </button>
+            </div>
+
+        </section>
+
+
+        <section id="itemsContainer" class="items-container">
+            <div class="loading">
+                Loading your vault...
+            </div>
+        </section>
+
+    </main>
+
+
+    <div id="modal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2>Add to DotVault</h2>
+
+                <button id="closeModal" class="close-button">
+                    ×
+                </button>
+            </div>
+
+
+            <form id="itemForm">
+
+                <label>
+                    Title
+
+                    <input
+                        id="titleInput"
+                        type="text"
+                        required
+                        placeholder="e.g. Git status"
+                    >
+                </label>
+
+
+                <label>
+                    Content
+
+                    <textarea
+                        id="contentInput"
+                        required
+                        placeholder="What do you want to remember?"
+                    ></textarea>
+                </label>
+
+
+                <label>
+                    Category
+
+                    <select id="categoryInput">
+                        <option value="command">Command</option>
+                        <option value="note">Note</option>
+                        <option value="api">API</option>
+                        <option value="link">Link</option>
+                    </select>
+                </label>
+
+
+                <label>
+                    Tags
+
+                    <input
+                        id="tagsInput"
+                        type="text"
+                        placeholder="python, git, terminal"
+                    >
+                </label>
+
+
+                <button type="submit" class="save-button">
+                    Save item
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
