@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from app.database import (
     initialize_database,
@@ -29,8 +31,24 @@ app.add_middleware(
 initialize_database()
 
 
+# ---------------------------------------------------------
+# FRONTEND
+# ---------------------------------------------------------
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+
 @app.get("/")
 def home():
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+# ---------------------------------------------------------
+# API
+# ---------------------------------------------------------
+
+@app.get("/api")
+def api_home():
     return {
         "name": "DotVault",
         "message": "Your personal knowledge vault",
@@ -49,7 +67,7 @@ def read_item(item_id: str):
     if item is None:
         raise HTTPException(
             status_code=404,
-            detail="Item not found",
+            detail="Item not found"
         )
 
     return item
@@ -60,28 +78,27 @@ def create_item(item: VaultItem):
     try:
         save_item(item)
         return item
-
     except Exception as error:
-        print(f"ERROR SAVING ITEM: {error}")
-
+        print(f"Database error: {error}")
         raise HTTPException(
             status_code=500,
-            detail=str(error),
+            detail="Failed to save item"
         )
 
 
 @app.put("/items/{item_id}")
 def edit_item(item_id: str, item: VaultItem):
+
     if item_id != item.item_id:
         raise HTTPException(
             status_code=400,
-            detail="Item ID mismatch",
+            detail="Item ID mismatch"
         )
 
     if get_item(item_id) is None:
         raise HTTPException(
             status_code=404,
-            detail="Item not found",
+            detail="Item not found"
         )
 
     update_item(item)
@@ -91,10 +108,11 @@ def edit_item(item_id: str, item: VaultItem):
 
 @app.delete("/items/{item_id}")
 def remove_item(item_id: str):
+
     if not delete_item(item_id):
         raise HTTPException(
             status_code=404,
-            detail="Item not found",
+            detail="Item not found"
         )
 
     return {
@@ -108,6 +126,7 @@ def search(
     category: str | None = None,
     sort_by: str = "score",
 ):
+
     items = get_all_items()
 
     return search_items(
