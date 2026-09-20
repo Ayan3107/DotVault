@@ -32,7 +32,7 @@ app.add_middleware(
 initialize_database()
 
 
-@app.get("/")
+@app.get("/api")
 def home():
     return {
         "name": "DotVault",
@@ -40,12 +40,12 @@ def home():
     }
 
 
-@app.get("/items")
+@app.get("/api/items")
 def list_items():
     return get_all_items()
 
 
-@app.get("/items/{item_id}")
+@app.get("/api/items/{item_id}")
 def read_item(item_id: str):
     item = get_item(item_id)
 
@@ -55,13 +55,13 @@ def read_item(item_id: str):
     return item
 
 
-@app.post("/items")
+@app.post("/api/items")
 def create_item(item: VaultItem):
     save_item(item)
     return item
 
 
-@app.put("/items/{item_id}")
+@app.put("/api/items/{item_id}")
 def edit_item(item_id: str, item: VaultItem):
     if item_id != item.item_id:
         raise HTTPException(status_code=400, detail="Item ID mismatch")
@@ -74,7 +74,7 @@ def edit_item(item_id: str, item: VaultItem):
     return item
 
 
-@app.delete("/items/{item_id}")
+@app.delete("/api/items/{item_id}")
 def remove_item(item_id: str):
     if not delete_item(item_id):
         raise HTTPException(status_code=404, detail="Item not found")
@@ -82,7 +82,7 @@ def remove_item(item_id: str):
     return {"message": "Item deleted"}
 
 
-@app.get("/search")
+@app.get("/api/search")
 def search(
     q: str,
     category: str | None = None,
