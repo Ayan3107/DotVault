@@ -1,4 +1,4 @@
-const API_URL = "/api";
+const API_URL = "";
 
 const itemsContainer = document.getElementById("itemsContainer");
 const searchInput = document.getElementById("searchInput");
@@ -13,7 +13,6 @@ const titleInput = document.getElementById("titleInput");
 const contentInput = document.getElementById("contentInput");
 const categoryInput = document.getElementById("categoryInput");
 const tagsInput = document.getElementById("tagsInput");
-
 
 let currentCategory = "all";
 
@@ -67,7 +66,10 @@ function displayItems(items) {
     itemsContainer.innerHTML = items.map(item => {
 
         const tags = item.tags
-            .map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`)
+            .map(
+                tag =>
+                    `<span class="tag">#${escapeHtml(tag)}</span>`
+            )
             .join("");
 
         return `
@@ -254,7 +256,25 @@ itemForm.addEventListener("submit", async event => {
 
 
         if (!response.ok) {
-            throw new Error("Failed to save item");
+
+            let errorMessage =
+                "Failed to save item";
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                errorMessage =
+                    errorData.detail ||
+                    errorMessage;
+
+            } catch {
+
+                // Keep default error message
+            }
+
+            throw new Error(errorMessage);
         }
 
 
@@ -269,7 +289,9 @@ itemForm.addEventListener("submit", async event => {
 
         console.error(error);
 
-        alert("Could not save the item.");
+        alert(
+            `Could not save the item:\n${error.message}`
+        );
 
     }
 

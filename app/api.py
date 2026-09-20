@@ -19,10 +19,7 @@ app = FastAPI(title="DotVault API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +29,7 @@ app.add_middleware(
 initialize_database()
 
 
-@app.get("/api")
+@app.get("/")
 def home():
     return {
         "name": "DotVault",
@@ -40,49 +37,72 @@ def home():
     }
 
 
-@app.get("/api/items")
+@app.get("/items")
 def list_items():
     return get_all_items()
 
 
-@app.get("/api/items/{item_id}")
+@app.get("/items/{item_id}")
 def read_item(item_id: str):
     item = get_item(item_id)
 
     if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Item not found",
+        )
 
     return item
 
 
-@app.post("/api/items")
+@app.post("/items")
 def create_item(item: VaultItem):
-    save_item(item)
-    return item
+    try:
+        save_item(item)
+        return item
+
+    except Exception as error:
+        print(f"ERROR SAVING ITEM: {error}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(error),
+        )
 
 
-@app.put("/api/items/{item_id}")
+@app.put("/items/{item_id}")
 def edit_item(item_id: str, item: VaultItem):
     if item_id != item.item_id:
-        raise HTTPException(status_code=400, detail="Item ID mismatch")
+        raise HTTPException(
+            status_code=400,
+            detail="Item ID mismatch",
+        )
 
     if get_item(item_id) is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Item not found",
+        )
 
     update_item(item)
 
     return item
 
 
-@app.delete("/api/items/{item_id}")
+@app.delete("/items/{item_id}")
 def remove_item(item_id: str):
     if not delete_item(item_id):
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Item not found",
+        )
 
-    return {"message": "Item deleted"}
+    return {
+        "message": "Item deleted"
+    }
 
 
-@app.get("/api/search")
+@app.get("/search")
 def search(
     q: str,
     category: str | None = None,
