@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
@@ -16,35 +17,42 @@ from app.models import VaultItem
 from app.search import search_items
 
 
+# ---------------------------------------------------------
+# APP
+# ---------------------------------------------------------
+
 app = FastAPI(title="DotVault API")
 
+
+# ---------------------------------------------------------
+# CORS
+# ---------------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-initialize_database()
-
-
 # ---------------------------------------------------------
-# FRONTEND
+# PATHS
 # ---------------------------------------------------------
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
-@app.get("/")
-def home():
-    return FileResponse(FRONTEND_DIR / "index.html")
+# ---------------------------------------------------------
+# DATABASE
+# ---------------------------------------------------------
+
+initialize_database()
 
 
 # ---------------------------------------------------------
-# API
+# API HOME
 # ---------------------------------------------------------
 
 @app.get("/api")
@@ -55,6 +63,10 @@ def api_home():
     }
 
 
+# ---------------------------------------------------------
+# ITEMS
+# ---------------------------------------------------------
+
 @app.get("/items")
 def list_items():
     return get_all_items()
@@ -62,6 +74,7 @@ def list_items():
 
 @app.get("/items/{item_id}")
 def read_item(item_id: str):
+
     item = get_item(item_id)
 
     if item is None:
@@ -75,11 +88,16 @@ def read_item(item_id: str):
 
 @app.post("/items")
 def create_item(item: VaultItem):
+
     try:
         save_item(item)
+
         return item
+
     except Exception as error:
+
         print(f"Database error: {error}")
+
         raise HTTPException(
             status_code=500,
             detail="Failed to save item"
@@ -90,12 +108,14 @@ def create_item(item: VaultItem):
 def edit_item(item_id: str, item: VaultItem):
 
     if item_id != item.item_id:
+
         raise HTTPException(
             status_code=400,
             detail="Item ID mismatch"
         )
 
     if get_item(item_id) is None:
+
         raise HTTPException(
             status_code=404,
             detail="Item not found"
@@ -110,6 +130,7 @@ def edit_item(item_id: str, item: VaultItem):
 def remove_item(item_id: str):
 
     if not delete_item(item_id):
+
         raise HTTPException(
             status_code=404,
             detail="Item not found"
@@ -119,6 +140,10 @@ def remove_item(item_id: str):
         "message": "Item deleted"
     }
 
+
+# ---------------------------------------------------------
+# SEARCH
+# ---------------------------------------------------------
 
 @app.get("/search")
 def search(
@@ -135,3 +160,36 @@ def search(
         category=category,
         sort_by=sort_by,
     )
+
+
+# ---------------------------------------------------------
+# FRONTEND
+# ---------------------------------------------------------
+
+@app.get("/")
+def frontend():
+
+    return FileResponse(
+        FRONTEND_DIR / "index.html"
+    )
+
+
+# ---------------------------------------------------------
+# STATIC FILES
+# ---------------------------------------------------------
+# This serves:
+# /app.js
+# /style.css
+# and any other frontend assets.
+#
+# IMPORTANT:
+# Keep this AFTER the API routes above.
+
+app.mount(
+    "/",
+    StaticFiles(
+        directory=FRONTEND_DIR,
+        html=True
+    ),
+    name="frontend"
+)
