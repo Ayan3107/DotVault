@@ -1,25 +1,50 @@
 import json
 import os
-
-import psycopg
+import sqlite3
+from pathlib import Path
 
 from app.models import VaultItem
 
 
+# ---------------------------------------------------------
+# DATABASE CONFIGURATION
+# ---------------------------------------------------------
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATABASE_FILE = DATA_DIR / "dotvault.db"
 
-def get_connection():
-    if not DATABASE_URL:
-        raise RuntimeError(
-            "DATABASE_URL environment variable is not configured."
-        )
+
+# ---------------------------------------------------------
+# SQLITE - LOCAL DEVELOPMENT
+# ---------------------------------------------------------
+
+def get_sqlite_connection():
+    DATA_DIR.mkdir(exist_ok=True)
+    return sqlite3.connect(DATABASE_FILE)
+
+
+# ---------------------------------------------------------
+# POSTGRES - PRODUCTION
+# ---------------------------------------------------------
+
+def get_postgres_connection():
+    import psycopg
 
     return psycopg.connect(DATABASE_URL)
 
 
+# ---------------------------------------------------------
+# INITIALIZE DATABASE
+# ---------------------------------------------------------
+
 def initialize_database() -> None:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS vault_items (
@@ -33,9 +58,40 @@ def initialize_database() -> None:
             """
         )
 
+        connection.commit()
+        connection.close()
+
+    else:
+
+        connection = get_sqlite_connection()
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS vault_items (
+                item_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                category TEXT NOT NULL,
+                tags TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.commit()
+        connection.close()
+
+
+# ---------------------------------------------------------
+# SAVE ITEM
+# ---------------------------------------------------------
 
 def save_item(item: VaultItem) -> None:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         connection.execute(
             """
             INSERT INTO vault_items
@@ -52,9 +108,43 @@ def save_item(item: VaultItem) -> None:
             ),
         )
 
+        connection.commit()
+        connection.close()
+
+    else:
+
+        connection = get_sqlite_connection()
+
+        connection.execute(
+            """
+            INSERT INTO vault_items
+            (item_id, title, content, category, tags, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                item.item_id,
+                item.title,
+                item.content,
+                item.category,
+                json.dumps(item.tags),
+                item.created_at,
+            ),
+        )
+
+        connection.commit()
+        connection.close()
+
+
+# ---------------------------------------------------------
+# GET ONE ITEM
+# ---------------------------------------------------------
 
 def get_item(item_id: str) -> VaultItem | None:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         row = connection.execute(
             """
             SELECT item_id, title, content, category, tags, created_at
@@ -63,6 +153,23 @@ def get_item(item_id: str) -> VaultItem | None:
             """,
             (item_id,),
         ).fetchone()
+
+        connection.close()
+
+    else:
+
+        connection = get_sqlite_connection()
+
+        row = connection.execute(
+            """
+            SELECT item_id, title, content, category, tags, created_at
+            FROM vault_items
+            WHERE item_id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+
+        connection.close()
 
     if row is None:
         return None
@@ -77,8 +184,16 @@ def get_item(item_id: str) -> VaultItem | None:
     )
 
 
+# ---------------------------------------------------------
+# GET ALL ITEMS
+# ---------------------------------------------------------
+
 def get_all_items() -> list[VaultItem]:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         rows = connection.execute(
             """
             SELECT item_id, title, content, category, tags, created_at
@@ -86,6 +201,22 @@ def get_all_items() -> list[VaultItem]:
             ORDER BY created_at DESC
             """
         ).fetchall()
+
+        connection.close()
+
+    else:
+
+        connection = get_sqlite_connection()
+
+        rows = connection.execute(
+            """
+            SELECT item_id, title, content, category, tags, created_at
+            FROM vault_items
+            ORDER BY created_at DESC
+            """
+        ).fetchall()
+
+        connection.close()
 
     return [
         VaultItem(
@@ -100,8 +231,16 @@ def get_all_items() -> list[VaultItem]:
     ]
 
 
+# ---------------------------------------------------------
+# UPDATE ITEM
+# ---------------------------------------------------------
+
 def update_item(item: VaultItem) -> bool:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         cursor = connection.execute(
             """
             UPDATE vault_items
@@ -122,11 +261,49 @@ def update_item(item: VaultItem) -> bool:
             ),
         )
 
-        return cursor.rowcount > 0
+        connection.commit()
+        connection.close()
 
+    else:
+
+        connection = get_sqlite_connection()
+
+        cursor = connection.execute(
+            """
+            UPDATE vault_items
+            SET title = ?,
+                content = ?,
+                category = ?,
+                tags = ?,
+                created_at = ?
+            WHERE item_id = ?
+            """,
+            (
+                item.title,
+                item.content,
+                item.category,
+                json.dumps(item.tags),
+                item.created_at,
+                item.item_id,
+            ),
+        )
+
+        connection.commit()
+        connection.close()
+
+    return cursor.rowcount > 0
+
+
+# ---------------------------------------------------------
+# DELETE ITEM
+# ---------------------------------------------------------
 
 def delete_item(item_id: str) -> bool:
-    with get_connection() as connection:
+
+    if DATABASE_URL:
+
+        connection = get_postgres_connection()
+
         cursor = connection.execute(
             """
             DELETE FROM vault_items
@@ -135,4 +312,22 @@ def delete_item(item_id: str) -> bool:
             (item_id,),
         )
 
-        return cursor.rowcount > 0
+        connection.commit()
+        connection.close()
+
+    else:
+
+        connection = get_sqlite_connection()
+
+        cursor = connection.execute(
+            """
+            DELETE FROM vault_items
+            WHERE item_id = ?
+            """,
+            (item_id,),
+        )
+
+        connection.commit()
+        connection.close()
+
+    return cursor.rowcount > 0
