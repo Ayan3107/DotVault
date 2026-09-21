@@ -6,24 +6,28 @@
 
     <title>DotVault</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
     <header class="topbar">
+
         <div class="brand">
+
             <div class="brand-mark">D</div>
 
             <div>
                 <h1>DotVault</h1>
                 <p>Your personal knowledge vault</p>
             </div>
+
         </div>
 
         <button id="addButton" class="add-button">
             + Add item
         </button>
+
     </header>
 
 
@@ -32,6 +36,7 @@
         <section class="search-section">
 
             <div class="search-box">
+
                 <span>⌕</span>
 
                 <input
@@ -40,58 +45,94 @@
                     placeholder="Search your vault..."
                     autocomplete="off"
                 >
+
             </div>
 
+
             <div class="filters">
-                <button class="filter active" data-category="all">
+
+                <button
+                    class="filter active"
+                    data-category="all"
+                >
                     All
                 </button>
 
-                <button class="filter" data-category="command">
+                <button
+                    class="filter"
+                    data-category="command"
+                >
                     Commands
                 </button>
 
-                <button class="filter" data-category="note">
+                <button
+                    class="filter"
+                    data-category="note"
+                >
                     Notes
                 </button>
 
-                <button class="filter" data-category="api">
+                <button
+                    class="filter"
+                    data-category="api"
+                >
                     APIs
                 </button>
 
-                <button class="filter" data-category="link">
+                <button
+                    class="filter"
+                    data-category="link"
+                >
                     Links
                 </button>
+
             </div>
 
         </section>
 
 
-        <section id="itemsContainer" class="items-container">
+        <section
+            id="itemsContainer"
+            class="items-container"
+        >
+
             <div class="loading">
                 Loading your vault...
             </div>
+
         </section>
 
     </main>
 
 
-    <div id="modal" class="modal hidden">
+    <!-- ADD ITEM MODAL -->
+
+    <div
+        id="modal"
+        class="modal hidden"
+    >
 
         <div class="modal-content">
 
             <div class="modal-header">
+
                 <h2>Add to DotVault</h2>
 
-                <button id="closeModal" class="close-button">
+                <button
+                    id="closeModal"
+                    class="close-button"
+                    type="button"
+                >
                     ×
                 </button>
+
             </div>
 
 
             <form id="itemForm">
 
                 <label>
+
                     Title
 
                     <input
@@ -100,10 +141,12 @@
                         required
                         placeholder="e.g. Git status"
                     >
+
                 </label>
 
 
                 <label>
+
                     Content
 
                     <textarea
@@ -111,22 +154,39 @@
                         required
                         placeholder="What do you want to remember?"
                     ></textarea>
+
                 </label>
 
 
                 <label>
+
                     Category
 
                     <select id="categoryInput">
-                        <option value="command">Command</option>
-                        <option value="note">Note</option>
-                        <option value="api">API</option>
-                        <option value="link">Link</option>
+
+                        <option value="command">
+                            Command
+                        </option>
+
+                        <option value="note">
+                            Note
+                        </option>
+
+                        <option value="api">
+                            API
+                        </option>
+
+                        <option value="link">
+                            Link
+                        </option>
+
                     </select>
+
                 </label>
 
 
                 <label>
+
                     Tags
 
                     <input
@@ -134,10 +194,14 @@
                         type="text"
                         placeholder="python, git, terminal"
                     >
+
                 </label>
 
 
-                <button type="submit" class="save-button">
+                <button
+                    type="submit"
+                    class="save-button"
+                >
                     Save item
                 </button>
 
@@ -148,7 +212,7 @@
     </div>
 
 
-    <script src="app.js"></script>
+    <script src="/static/app.js"></script>
 
 </body>
 </html>

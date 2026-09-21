@@ -15,35 +15,40 @@ const categoryInput = document.getElementById("categoryInput");
 const tagsInput = document.getElementById("tagsInput");
 
 let currentCategory = "all";
+let searchTimeout;
 
 
-/* ---------- Load items ---------- */
+/* ---------------------------------------------------------
+   LOAD ITEMS
+--------------------------------------------------------- */
 
 async function loadItems() {
     try {
         const response = await fetch(`${API_URL}/items`);
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error("Failed to load items");
+            throw new Error(data.detail || "Failed to load items");
         }
 
-        const items = await response.json();
-
-        displayItems(items);
+        displayItems(data);
 
     } catch (error) {
-        console.error(error);
+        console.error("Load error:", error);
 
         itemsContainer.innerHTML = `
             <div class="empty">
-                Could not connect to DotVault.
+                Could not load your vault.
             </div>
         `;
     }
 }
 
 
-/* ---------- Display items ---------- */
+/* ---------------------------------------------------------
+   DISPLAY ITEMS
+--------------------------------------------------------- */
 
 function displayItems(items) {
 
@@ -65,7 +70,7 @@ function displayItems(items) {
 
     itemsContainer.innerHTML = items.map(item => {
 
-        const tags = item.tags
+        const tags = (item.tags || [])
             .map(
                 tag =>
                     `<span class="tag">#${escapeHtml(tag)}</span>`
@@ -102,9 +107,9 @@ function displayItems(items) {
 }
 
 
-/* ---------- Search ---------- */
-
-let searchTimeout;
+/* ---------------------------------------------------------
+   SEARCH
+--------------------------------------------------------- */
 
 searchInput.addEventListener("input", () => {
 
@@ -122,7 +127,7 @@ async function performSearch() {
     const query = searchInput.value.trim();
 
     if (!query) {
-        loadItems();
+        await loadItems();
         return;
     }
 
@@ -138,19 +143,19 @@ async function performSearch() {
 
         const response = await fetch(url);
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error("Search failed");
+            throw new Error(data.detail || "Search failed");
         }
 
-        const results = await response.json();
-
-        const items = results.map(result => result[1]);
+        const items = data.map(result => result[1]);
 
         displayItems(items);
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Search error:", error);
 
         itemsContainer.innerHTML = `
             <div class="empty">
@@ -161,7 +166,9 @@ async function performSearch() {
 }
 
 
-/* ---------- Category filters ---------- */
+/* ---------------------------------------------------------
+   CATEGORY FILTERS
+--------------------------------------------------------- */
 
 filters.forEach(filter => {
 
@@ -187,7 +194,9 @@ filters.forEach(filter => {
 });
 
 
-/* ---------- Add item modal ---------- */
+/* ---------------------------------------------------------
+   ADD ITEM MODAL
+--------------------------------------------------------- */
 
 addButton.addEventListener("click", () => {
 
@@ -214,7 +223,9 @@ modal.addEventListener("click", event => {
 });
 
 
-/* ---------- Save item ---------- */
+/* ---------------------------------------------------------
+   SAVE ITEM
+--------------------------------------------------------- */
 
 itemForm.addEventListener("submit", async event => {
 
@@ -239,6 +250,12 @@ itemForm.addEventListener("submit", async event => {
     };
 
 
+    if (!item.title || !item.content) {
+        alert("Please enter a title and content.");
+        return;
+    }
+
+
     try {
 
         const response = await fetch(
@@ -255,27 +272,17 @@ itemForm.addEventListener("submit", async event => {
         );
 
 
+        const data = await response.json();
+
+
         if (!response.ok) {
-
-            let errorMessage =
-                "Failed to save item";
-
-            try {
-
-                const errorData =
-                    await response.json();
-
-                errorMessage =
-                    errorData.detail ||
-                    errorMessage;
-
-            } catch {
-
-                // Keep default error message
-            }
-
-            throw new Error(errorMessage);
+            throw new Error(
+                data.detail || "Failed to save item"
+            );
         }
+
+
+        console.log("Saved:", data);
 
 
         itemForm.reset();
@@ -287,10 +294,10 @@ itemForm.addEventListener("submit", async event => {
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Save error:", error);
 
         alert(
-            `Could not save the item:\n${error.message}`
+            `Could not save item.\n\n${error.message}`
         );
 
     }
@@ -298,7 +305,9 @@ itemForm.addEventListener("submit", async event => {
 });
 
 
-/* ---------- Basic HTML escaping ---------- */
+/* ---------------------------------------------------------
+   HTML ESCAPING
+--------------------------------------------------------- */
 
 function escapeHtml(value) {
 
@@ -312,6 +321,8 @@ function escapeHtml(value) {
 }
 
 
-/* ---------- Start ---------- */
+/* ---------------------------------------------------------
+   START
+--------------------------------------------------------- */
 
 loadItems();
